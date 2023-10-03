@@ -6,7 +6,9 @@ from auxiliary import *
 from visualizations import *
 
 def upload_file():
+
   file_uploaded = st.sidebar.file_uploader("Upload a file",type=(["xlsx","xls"]))
+  
   if file_uploaded is not None:
     wb = openpyxl.load_workbook(file_uploaded, read_only=True)
     sheetname = st.sidebar.selectbox("Select the sheetname", wb.sheetnames)
@@ -14,7 +16,10 @@ def upload_file():
     st.sidebar.divider()
     return df
   else:
-    return None
+    st.sidebar.caption("Demo file has been upload. If you would like to see another file, feel free to upload.")
+    df = pd.read_excel("data/vegan_dataset.xlsx", sheet_name="Veganos")
+    st.sidebar.divider()
+    return df
   
 def select_label_and_attributes(df):
   label = st.sidebar.selectbox("Select the label", df.columns)

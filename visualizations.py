@@ -75,6 +75,8 @@ def create_scatterplotmatrix(data, label, att):
     color=label,
     category_orders={label: sorted(set_label)}
   )
+
+  fig.update_traces(diagonal_visible=False)
   return fig
 
 def create_parallelcoordinates(data, label, attributes):
