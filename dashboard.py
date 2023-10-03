@@ -16,7 +16,7 @@ def upload_file():
     st.sidebar.divider()
     return df
   else:
-    st.sidebar.caption("Demo file has been upload. If you would like to see another file, feel free to upload.")
+    st.sidebar.caption("Demo file has been uploaded. If you would like to see another file, feel free to upload.")
     df = pd.read_excel("data/vegan_dataset.xlsx", sheet_name="Veganos")
     st.sidebar.divider()
     return df
