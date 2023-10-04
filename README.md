@@ -7,7 +7,11 @@ This tool is designed to help you analyze and gain valuable insights into nutrit
 - Plotly and Matplotlib: These libraries are employed for creating dynamic and visually appealing charts and graphs.
 - Scikit-learn: The app incorporates Scikit-learn for natural language processing (NLP) and machine learning functionalities.
 
-## Running the project
+## Running the project online
+
+Visit [Nutritional Data Visualization](https://nutritional-data-visualization.streamlit.app/) to access the app online without any local setup.
+
+## Running the project locally
 
 1. Create a virtual enviroment
    
