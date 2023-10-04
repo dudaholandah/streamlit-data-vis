@@ -28,4 +28,4 @@ Visit [Nutritional Data Visualization](https://nutritional-data-visualization.st
 
 ## Project Overview
 
-<img src='demo_print.png' />
+<img src='demo_video.gif' />
