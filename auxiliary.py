@@ -17,9 +17,14 @@ def pre_process(text):
 
 def separating_data(df, label, attributes):
 
-  for index, row in df.iterrows():
-    processed_label = df[label][index].strip()
-    df.at[index,label] = processed_label
+  # check if type of label is string
+  if not isinstance(df[label][0], str):
+    df[label] = df[label].values.astype(str)
+  else:
+    for index, row in df.iterrows():    
+      processed_label = df[label][index].strip()
+      df.at[index,label] = processed_label
+
 
   data = df[attributes].copy()
   if label == "": data_label = pd.DataFrame()
