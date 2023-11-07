@@ -68,7 +68,14 @@ def render_plotly_ui(df, data, X, y, label, attributes):
     st.pyplot(fig_pca)
 
   with col12:  
-    st.write(df_selected_points)
+    try:
+      create_graph_network(df_selected_points)
+      import streamlit.components.v1 as components
+      html_file = open("data/graph.html", 'r', encoding='utf-8')
+      source_code = html_file.read() 
+      components.html(source_code, height=500)
+    except:
+      st.write(df_selected_points)
     
 
   return selected_idx
