@@ -13,9 +13,13 @@ from pyvis.network import Network
 import networkx as nx
 import random
 
-def create_scatterplot(data, label, y_label, X, y):
+def create_scatterplot(data, label, y_label, X, y, legend):
   data['x'] = X
   data['y'] = y
+
+  hover_data = {col: True for col in legend}
+  hover_data['x'] = False
+  hover_data['y'] = False
 
   fig = px.scatter(
     data, 
@@ -24,7 +28,9 @@ def create_scatterplot(data, label, y_label, X, y):
     color=label,
     template='plotly_white',
     category_orders={ label: sorted(set(y_label))}, 
-    height=500 
+    height=500,
+    hover_data=hover_data
+    # labels={'x': False, 'y': False}
   )
   
   fig.update_layout(xaxis_title="",
@@ -45,26 +51,30 @@ def tsne(data, X, y, label):
 
   return create_scatterplot(data, label, y, X_tsne, y_tsne)
 
-def pca(data, X, y, label, n_components):
+def pca(data, X, y, label, n_components, legend):
   sklearn_pca = sklearnPCA(n_components=n_components)
   X_pca = sklearn_pca.fit_transform(X)
   X_pca, y_pca = get_x_y(X_pca)
   
-  return create_scatterplot(data, label, y, X_pca, y_pca)
+  return create_scatterplot(data, label, y, X_pca, y_pca, legend)
 
-def create_wordcloud(data):
+def create_wordcloud(data, column):
 
   comment_words = ''
   vocab = set()
   stopwords = set(STOPWORDS)
 
-  for col in data:
-    if data[col].dtype == "object":
-      for text in data[col]:
-        tokens = text.split()
-        for i in range(len(tokens)):
-          vocab.add(pre_process(tokens[i]))
+  # for col in data:
+  #   if data[col].dtype == "object":
+  #     for text in data[col]:
+  #       tokens = text.split()
+  #       for i in range(len(tokens)):
+  #         vocab.add(pre_process(tokens[i]))
 
+  for text in data[column]:
+    tokens = text.split()
+    for i in range(len(tokens)):
+      vocab.add(pre_process(tokens[i]))
 
   for word in vocab:
     comment_words += " " + word + " "
@@ -81,7 +91,7 @@ def create_wordcloud(data):
   
   return plt
 
-def create_scatterplotmatrix(data, label, att):
+def create_scatterplotmatrix(data, label, att, legend):
 
   set_label = set()
 
@@ -91,13 +101,14 @@ def create_scatterplotmatrix(data, label, att):
   fig = px.scatter_matrix(data,
     dimensions=att,
     color=label,
-    category_orders={label: sorted(set_label)}
+    category_orders={label: sorted(set_label)},
+    hover_data={col: True for col in legend}
   )
 
   fig.update_traces(diagonal_visible=False)
   return fig
 
-def create_parallelcoordinates(data, label, attributes):
+def create_piechart(data, label, attributes):
 
   df = data.copy()
   set_label = set()
@@ -109,13 +120,17 @@ def create_parallelcoordinates(data, label, attributes):
   fig = px.pie(df, 
     values='index', 
     names=label, 
-    category_orders={label: sorted(set_label)}
+    category_orders={label: sorted(set_label)},
+    hover_data={'index':False}
   )
 
   return fig
 
-def create_graph_network(data):
-  data_ingredients = [x.split(',') for x in data['Ingredients']]
+def create_graph_network(data, tuple):
+
+  column, times, multip = tuple
+
+  data_ingredients = [x.split(',') for x in data[column]]
   ignore_ingredients = ['water', 'salt']
 
   # pre processando ingredientes
@@ -140,7 +155,7 @@ def create_graph_network(data):
 
   # contagem de pares de ingredientes
   for pair, count in ingredient_pairs_count.items():
-    if count > 5:
+    if count >= times:
       ingredient_pairs_count_reduced[pair] = count
 
   # nodes e edges
@@ -169,8 +184,8 @@ def create_graph_network(data):
       if src in e: num_src += 1
       if dest in e: num_dest += 1
 
-    net.add_node(src, size=num_src)
-    net.add_node(dest, size=num_dest)
+    net.add_node(src, size=num_src*multip)
+    net.add_node(dest, size=num_dest*multip)
     net.add_edge(src, dest)
 
   net.save_graph("data/graph.html")

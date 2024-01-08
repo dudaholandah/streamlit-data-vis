@@ -27,31 +27,47 @@ def select_label_and_attributes(df):
   attributes = st.sidebar.multiselect("Select the attributes", df.columns)
   return label, attributes
 
+def select_neural_network_column(df):
+  st.sidebar.divider()
+  column = st.sidebar.selectbox("Select the attribute to be analyzed in the Neural Network and Wordcloud", df.columns)
+  times = st.sidebar.number_input("Minimum times the pair of ingredients must repete in the dataset", min_value=1, value=5)
+  multip = st.sidebar.number_input("Number of time to multiply the size of the nodes in the Neural Network", min_value=1, max_value=10, value=1)
+  return column, times, multip
+
+def select_legend(df, att, label):
+  st.sidebar.divider()
+  columns = st.sidebar.multiselect("Add attributes to the legend", [col for col in df.columns if (col not in att) and (col != label)])
+  return columns
+
 def load_and_process_data():
   df = upload_file()
   label, attributes = select_label_and_attributes(df)
-  X, y, data = pre_processing_data(df, label, attributes)
-  return df, data, X, y, label, attributes
 
-def render_plotly_ui(df, data, X, y, label, attributes):
+  legend = select_legend(df, attributes, label)
+  network_tuple = select_neural_network_column(df)
+
+  X, y, data = pre_processing_data(df, label, attributes, legend)
+  return df, data, X, y, label, attributes, legend, network_tuple
+
+def render_plotly_ui(df, data, X, y, label, attributes, legend, network_tuple):
 
   col01, col02 = st.columns((2))
   with col01:
     try:
-      fig_spmatrix = create_scatterplotmatrix(data, label, attributes)
+      fig_spmatrix = create_scatterplotmatrix(data, label, attributes, legend)
       st.plotly_chart(fig_spmatrix)
     except Exception as e: print(f"An error occurred: {e}")
 
   with col02:
     try:
-      fig_parallelcoord = create_parallelcoordinates(data, label, attributes)
-      st.plotly_chart(fig_parallelcoord, theme="streamlit")
+      fig_piechart = create_piechart(data, label, attributes)
+      st.plotly_chart(fig_piechart, theme="streamlit")
     except Exception as e: print(f"An error occurred: {e}")
 
 
   selected_rows = []
   selected_idx = set()
-  fig_pca = pca(data, X, y, label, len(attributes))
+  fig_pca = pca(data, X, y, label, len(attributes), legend+attributes)
   selected_points =  plotly_events(fig_pca, select_event=True, key="tsne_query")
 
   for i in data.index:
@@ -64,12 +80,12 @@ def render_plotly_ui(df, data, X, y, label, attributes):
 
   with col11:
     df_selected_points = pd.concat(selected_rows, ignore_index=True)  
-    fig_pca = create_wordcloud(df_selected_points)      
+    fig_pca = create_wordcloud(df_selected_points, network_tuple[0])      
     st.pyplot(fig_pca)
 
   with col12:  
     try:
-      create_graph_network(df_selected_points)
+      create_graph_network(df_selected_points, network_tuple)
       import streamlit.components.v1 as components
       html_file = open("data/graph.html", 'r', encoding='utf-8')
       source_code = html_file.read() 
@@ -99,19 +115,3 @@ def update_state(current_query):
 def reset_state_callback():
     st.session_state.counter = 1 + st.session_state.counter
     st.session_state["tsne_query"] = set()
-  
-def main():
-  try:
-    df, data, X, y, label, attributes = load_and_process_data()
-    current_query = render_plotly_ui(df, data, X, y, label, attributes)
-    update_state(current_query)
-    st.button("Reset filters", on_click=reset_state_callback)
-  except Exception as e:
-    print(f"An error occurred: {e}")
-
-if __name__ == "__main__":
-  st.set_page_config(page_title="FoodVis", page_icon=":apple:", layout="wide")
-  st.sidebar.title("Food Vis")
-
-  initialize_state()
-  main()

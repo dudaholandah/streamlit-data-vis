@@ -4,10 +4,10 @@ import numpy as np
 from unidecode import unidecode
 import re
 
-def pre_processing_data(df, label, attributes):
-  data, data_label = separating_data(df, label, attributes)
+def pre_processing_data(df, label, attributes, legend):
+  data, data_label, data_legend = separating_data(df, label, attributes, legend)
   data = normalizing_data(data)
-  return final_data(data, data_label) # X, y, data
+  return final_data(data, data_label, data_legend) # X, y, data
 
 def pre_process(text):
   text = re.sub(r'[.,():%-]+', " ", text)
@@ -15,7 +15,7 @@ def pre_process(text):
   text = unidecode(text.strip().lower())
   return text
 
-def separating_data(df, label, attributes):
+def separating_data(df, label, attributes, legend):
 
   # check if type of label is string
   if not isinstance(df[label][0], str):
@@ -25,11 +25,15 @@ def separating_data(df, label, attributes):
       processed_label = df[label][index].strip()
       df.at[index,label] = processed_label
 
-
   data = df[attributes].copy()
+
   if label == "": data_label = pd.DataFrame()
   else: data_label = df[label].copy()
-  return data, data_label
+
+  if legend == []: data_legend = pd.DataFrame()
+  else:  data_legend =  df[legend].copy()
+  
+  return data, data_label, data_legend
 
 def tfidf(X):
   from sklearn.feature_extraction.text import TfidfVectorizer
@@ -81,6 +85,7 @@ def normalizing_data(df):
   X_obj = []
   
   for att in df:
+    # isinstance(df[att], (int, float, complex))
     if df[att].dtype == "float64": X_num.append(att)
     else: X_obj.append(att)     
   
@@ -102,7 +107,7 @@ def normalizing_data(df):
 
   return data_normalized
 
-def final_data(data, data_label):
+def final_data(data, data_label, data_legend):
   raw_data = data
   raw_data = raw_data.replace(np.nan,0)
 
@@ -112,6 +117,8 @@ def final_data(data, data_label):
   X = raw_data.values
   y = data_label.values
   all_data = raw_data.join(data_label)
+
+  all_data = all_data.join(data_legend)
 
   return X, y, all_data
 
