@@ -9,8 +9,8 @@ if __name__ == "__main__":
   initialize_state()
 
   try:
-    df, data, X, y, label, attributes, legend, network_tuple = load_and_process_data()
-    current_query = render_plotly_ui(df, data, X, y, label, attributes, legend, network_tuple)
+    df, data, X, y, choice, label, attributes, legend, network_tuple = load_and_process_data()
+    current_query = render_plotly_ui(df, data, X, y, choice, label, attributes, legend, network_tuple)
     update_state(current_query)
     st.button("Reset filters", on_click=reset_state_callback)
   except Exception as e:

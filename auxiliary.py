@@ -3,11 +3,62 @@ import pandas as pd
 import numpy as np
 from unidecode import unidecode
 import re
+import os
+import pickle
 
 def pre_processing_data(df, label, attributes, legend):
   data, data_label, data_legend = separating_data(df, label, attributes, legend)
   data = normalizing_data(data)
   return final_data(data, data_label, data_legend) # X, y, data
+
+def predict_label(data, X, choice):
+
+  PATH = os.getcwd() + "/classification/data/"
+
+  if choice == "(1)Vegan/Vegetarian/Omni":
+    saved_rf_model = pickle.load(open(PATH + "veg_category_rf.pkl", 'rb'))
+    predictions = saved_rf_model.predict(X)
+
+    mapping = {0:'OMNI', 1:'VEGAN', 2:'VEGETARIAN'}
+    labeled_predictions = [mapping[key] for key in predictions]
+
+    data['predicted_label'] = labeled_predictions
+    label = 'predicted_label'
+
+
+  return data, label
+
+  # elif choice == "(2)Gluten Containing/Gluten Free":
+  #   pass
+  # else: 
+  #   pass
+
+
+# def pre_processing_data_from_classification(df, label, attributes, legend):
+#   if label == "(1)Vegan/Vegetarian/Omni":
+#     # veg_category dataset
+#     df_class = pd.read_excel(f"{os.getcwd()}/data/veg_category_usda_dataset.xlsx", sheet_name='Sheet1')
+#     data_label = df['vegCategory'].copy()
+    
+#   elif label == "(2)Gluten Containing/Gluten Free":
+#     # gluten dataset
+#     df_class = pd.read_excel(f"{os.getcwd()}/data/gluten_dataset.xlsx", sheet_name='dataset')
+#     data_label = df['Product']
+#   else: 
+#     # vegan dataset
+#     df_class = pd.read_excel(f"{os.getcwd()}/data/vegan_dataset.xlsx", sheet_name='Veganos')
+#     data_label = pd.DataFrame(df['Classification'])
+
+#   print("oi1")
+
+#   data = df[attributes].copy()
+
+#   print("oi2")
+#   data_legend = df[legend].copy()
+#   print("oi3")
+#   data = normalizing_data(data)
+#   print("oi4")
+#   return final_data(data, data_label, data_legend) # X, y, data
 
 def pre_process(text):
   text = re.sub(r'[.,():%-]+', " ", text)
@@ -17,13 +68,13 @@ def pre_process(text):
 
 def separating_data(df, label, attributes, legend):
 
-  # check if type of label is string
-  if not isinstance(df[label][0], str):
-    df[label] = df[label].values.astype(str)
-  else:
-    for index, row in df.iterrows():    
-      processed_label = df[label][index].strip()
-      df.at[index,label] = processed_label
+  # # check if type of label is string
+  # if not isinstance(df[label][0], str):
+  #   df[label] = df[label].values.astype(str)
+  # else:
+  #   for index, row in df.iterrows():    
+  #     processed_label = df[label][index].strip()
+  #     df.at[index,label] = processed_label
 
   data = df[attributes].copy()
 
@@ -86,7 +137,8 @@ def normalizing_data(df):
   
   for att in df:
     # isinstance(df[att], (int, float, complex))
-    if df[att].dtype == "float64": X_num.append(att)
+    # df[att].dtype == "float64"
+    if df[att].dtype == "float" or df[att].dtype == "int": X_num.append(att)
     else: X_obj.append(att)     
   
   X_num = df[df.columns.intersection(X_num)]
