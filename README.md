@@ -25,7 +25,3 @@ Visit [Nutritional Data Visualization](https://nutritional-data-visualization.st
 3. Run the project 
    
 ```streamlit run dashboard.py```
-
-## Project Overview
-
-<img src='demo_video.gif' />
