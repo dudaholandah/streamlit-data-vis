@@ -5,6 +5,7 @@ from sklearn import preprocessing
 import pandas as pd
 import numpy as np
 from unidecode import unidecode
+import re
 
 class File:
   def __init__(self, frontend):
@@ -27,7 +28,7 @@ class File:
     self.label = self.frontend.selectbox("Select the label", self.df.columns)
 
   def select_attributes(self):
-    self.attributes = self.frontend.multiselect("Select the attributes", self.df.columns)
+    self.attributes = self.frontend.multiselect("Select the attributes", [col for col in self.df.columns if (col != self.label)])
 
   def select_legend(self):
     self.legend = self.frontend.multiselect("Add attributes to the legend", [col for col in self.df.columns if (col not in self.attributes) and (col != self.label)])
@@ -44,16 +45,70 @@ class File:
     data_normalized = pd.DataFrame(xscaled,columns=attributes_dummies)
     data_normalized = data_normalized.replace(np.nan,0)
     return data_normalized
+  
+  def pre_process(self, text):
+    text = re.sub(r'[.,():%-]+', " ", text)
+    text = re.sub(r'[\s]+', " ", text)
+    text = unidecode(text.strip().lower())
+    return text
+  
+  def pre_processing_strings(self, data):
+    vocab = dict()
+    for att in data:
+      for obj in data[att]:
+        for word in obj.split(","):
+          word = self.pre_process(word)
+          if len(word) > 1 and word not in vocab: 
+            vocab[word] = len(vocab)
 
-  ### todo: pre processar strings / listas ...
+    vocab = sorted(vocab)
+    
+    ingredients_normalized = {}
+
+    for word in sorted(vocab):
+      ingredients_normalized[word] = []
+
+    for att in data:
+      for obj in data[att]:
+        aux = obj.split(",")
+        for i in range(len(aux)):
+          aux[i] = self.pre_process(aux[i])
+        for word in sorted(vocab):
+          if word in aux: ingredients_normalized[word].append(1)
+          else: ingredients_normalized[word].append(0)   
+
+    ingredients_normalized = pd.DataFrame(ingredients_normalized)
+
+    return ingredients_normalized
+
+  def define_type(self, column):
+    if pd.api.types.is_numeric_dtype(column):
+      return "Numeric"
+    elif column.apply(lambda x: isinstance(x, str) and x.startswith('[') and x.endswith(']')).mode()[0]:
+      return "List of strings"
+    elif column.apply(lambda x: isinstance(x, str) and ',' in x).mode()[0]:
+      return "Comma-separated string"
+    elif column.apply(lambda x: isinstance(x, str)).mode()[0]:
+      return "Simple string"
+    else:
+      return "Unknown type"
+
   def pre_processing(self):    
     # define data
     self.data_attr = self.df[self.attributes]
     self.data_label = self.df[self.label]
     self.data_legend = self.df[self.legend]
 
+    # define type
+    self.type_of_columns = {column: self.define_type(self.df[column]) for column in self.df.columns}
+    filtered_type_of_columns = {column: column_type for column, column_type in self.type_of_columns.items() if column in self.attributes}
+    numeric_types = [column for column, column_type in filtered_type_of_columns.items() if column_type == "Numeric"]
+    string_types = [column for column, column_type in filtered_type_of_columns.items() if column_type != "Numeric" and column_type != "Unknown type"]
+    
     # pre-processing numbers into a [0,1] range
-    self.data_attr_normalized = self.pre_processing_numbers(self.data_attr)
+    self.data_attr_normalized = self.pre_processing_numbers(self.df[self.df.columns.intersection(numeric_types)])
+    # pre-processing strings into one-hot-encoding
+    self.data_attr_normalized = self.data_attr_normalized.join(self.pre_processing_strings(self.df[self.df.columns.intersection(string_types)]))
 
     # pre-processing label
     for i in range(self.data_label.shape[0]):
@@ -69,7 +124,7 @@ class File:
     self.selected_data_normalized = merge(self.data_attr_normalized, self.data_label, self.data_legend)
 
   def filter_dataframe(self, selected_points):
-    data = self.selected_data_normalized
+    data = self.selected_data
     selected_rows = []
     selected_idx = set()
 

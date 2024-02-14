@@ -20,7 +20,7 @@ class Visualizations:
   def scatterplot_matrix(self):
     data = self.file.selected_data
     label = self.file.label
-    attributes = self.file.attributes
+    attributes = [column for column in self.file.attributes if self.file.type_of_columns[column] == "Numeric"]
     
     set_label = set()
 

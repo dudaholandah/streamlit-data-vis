@@ -25,7 +25,6 @@ class Page:
     self.file.pre_processing()
 
   def display_visualizations(self):
-
     self.visualizations = Visualizations(st, self.file)
     
     col1, col2 = st.columns(2)
