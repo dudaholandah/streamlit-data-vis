@@ -13,6 +13,7 @@ class Page:
     self.file = File(st.sidebar)
 
   def display_sidebar(self):
+
     self.file.load()
     st.sidebar.divider()
     self.file.select_label()
@@ -38,7 +39,7 @@ class Page:
         st.plotly_chart(self.visualizations.pie_chart())
       except Exception as e: print(f"An error occurred: {e}")
 
-    selected_points = plotly_events(self.visualizations.scatterplot_pca(), select_event=True,)
+    selected_points = plotly_events(self.visualizations.scatterplot_pca(), select_event=True, key="selected_points")
     self.file.filter_dataframe(selected_points)
 
     col3, col4 = st.columns(2)

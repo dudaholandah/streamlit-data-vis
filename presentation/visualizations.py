@@ -90,7 +90,7 @@ class Visualizations:
     return fig
   
   def scatterplot_pca(self):
-    sklearn_pca = sklearnPCA(n_components= len(self.file.attributes))
+    sklearn_pca = sklearnPCA(n_components=2)
     X_pca = sklearn_pca.fit_transform(self.file.X)
 
     X_pca[1:4, :]

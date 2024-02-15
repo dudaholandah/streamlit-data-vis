@@ -12,11 +12,11 @@ class File:
     self.frontend = frontend
 
   def load(self):
-    file_uploaded = self.frontend.file_uploader("Upload a file",type=(["xlsx","xls"]))
+    file_uploaded = self.frontend.file_uploader("Upload a file",type=(["xlsx","xls"]), key="file_uploaded")
   
     if file_uploaded is not None:
       wb = openpyxl.load_workbook(file_uploaded, read_only=True)
-      sheetname = self.frontend.selectbox("Select the sheetname", wb.sheetnames)
+      sheetname = self.frontend.selectbox("Select the sheetname", wb.sheetnames, key="sheetname")
       df = pd.read_excel(file_uploaded, sheet_name=sheetname)
       self.df = df
     else:
@@ -25,16 +25,16 @@ class File:
       self.df = df 
 
   def select_label(self):
-    self.label = self.frontend.selectbox("Select the label", self.df.columns)
+    self.label = self.frontend.selectbox("Select the label", self.df.columns, key="label")
 
   def select_attributes(self):
-    self.attributes = self.frontend.multiselect("Select the attributes", [col for col in self.df.columns if (col != self.label)])
+    self.attributes = self.frontend.multiselect("Select the attributes", [col for col in self.df.columns], key="attributes")
 
   def select_legend(self):
-    self.legend = self.frontend.multiselect("Add attributes to the legend", [col for col in self.df.columns if (col not in self.attributes) and (col != self.label)])
+    self.legend = self.frontend.multiselect("Add attributes to the legend", [col for col in self.df.columns if (col not in self.attributes) and (col != self.label)], key="legend")
 
   def select_inspection_attr(self):
-    self.inspection_attr = self.frontend.selectbox("Select the attribute to be analyzed in the Neural Network and Wordcloud", self.df.columns)
+    self.inspection_attr = self.frontend.selectbox("Select the attribute to be analyzed in the Neural Network and Wordcloud", self.df.columns, key="inspection_attr")
     self.multip = self.frontend.slider("Select the size of the nodes", 1, 5)
     self.times = self.frontend.slider("Select the frequency of connections", 1, 10, 5)
     
@@ -95,9 +95,10 @@ class File:
 
   def pre_processing(self):    
     # define data
-    self.data_attr = self.df[self.attributes]
-    self.data_label = self.df[self.label]
-    self.data_legend = self.df[self.legend]
+    if self.label in self.attributes: self.attributes.remove(self.label) 
+    self.data_attr = self.df[self.attributes].copy()
+    self.data_label = self.df[self.label].copy()
+    self.data_legend = self.df[self.legend].copy()
 
     # define type
     self.type_of_columns = {column: self.define_type(self.df[column]) for column in self.df.columns}
@@ -123,6 +124,11 @@ class File:
     self.selected_data = merge(self.data_attr, self.data_label, self.data_legend)
     self.selected_data_normalized = merge(self.data_attr_normalized, self.data_label, self.data_legend)
 
+    if self.inspection_attr not in self.attributes and self.inspection_attr != self.label:
+      data_inspect = self.df[self.inspection_attr].copy()
+      self.selected_data = self.selected_data.join(data_inspect)
+      self.selected_data_normalized = self.selected_data_normalized.join(data_inspect)
+
   def filter_dataframe(self, selected_points):
     data = self.selected_data
     selected_rows = []
@@ -130,12 +136,9 @@ class File:
 
     for i in data.index:
       for pt in selected_points:
-        if data['x'][i] == pt['x'] and data['y'][i] == pt['y'] and i not in selected_idx:
+        if abs(data['x'][i] - pt['x']) < 1e-4 and abs(data['y'][i] - pt['y']) < 1e-4 and i not in selected_idx:
           selected_idx.add(i)
-          selected_rows.append(pd.DataFrame([self.df.iloc[i]]))
+          selected_rows.append(pd.DataFrame([data.iloc[i]]))
 
     df_filtred = pd.concat(selected_rows, ignore_index=True)
-    self.df_filtred = df_filtred 
-  
-
-  
+    self.df_filtred = df_filtred
