@@ -48,13 +48,8 @@ class File:
     self.times = self.frontend.slider("Select the frequency of connections", 1, 10, 5)
 
   def is_possible_to_classify(self):
-    columns_to_search = ['Carbohydrate', 'Fiber', 'Protein', 'Sugar', 'Total Fat', 'Calcium', 'Sodium', 'Zinc']
-    pattern = '|'.join(columns_to_search)
-
-    matched_columns = self.df.filter(regex=pattern)
-    matched_columns = matched_columns.reindex(sorted(matched_columns.columns), axis=1)
-
-    return len(matched_columns.columns) == 8
+    columns = [c for c in self.df.columns if pd.api.types.is_numeric_dtype(self.df[c])]
+    return len(columns) >= 8
   
   def pre_processing_numbers(self, data):
     attributes_dummies = data.columns
