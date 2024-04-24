@@ -1,8 +1,8 @@
 import pandas as pd
 import openpyxl
+from business.classification import Classification
 
 from sklearn import preprocessing
-import pandas as pd
 import numpy as np
 from unidecode import unidecode
 import re
@@ -25,7 +25,16 @@ class File:
       self.df = df 
 
   def select_label(self):
-    self.label = self.frontend.selectbox("Select the label", self.df.columns, key="label")
+    if(self.is_possible_to_classify()):
+      choice = self.frontend.radio("Select the label from:", ["Uploaded File", "Classification Results"])
+      if choice == "Uploaded File":
+        self.label = self.frontend.selectbox("Select the label", self.df.columns, key="label")
+      else:
+        label = self.frontend.selectbox("Select the referenced dataset", ["Vegan", "USDA", "Gluten", "Vegetarian-Vegan-Omni"], key="label")
+        classification = Classification(label)
+        self.label = classification.predict_label(self.df)
+    else: 
+      self.label = self.frontend.selectbox("Select the label", self.df.columns, key="label")
 
   def select_attributes(self):
     self.attributes = self.frontend.multiselect("Select the attributes", [col for col in self.df.columns], key="attributes")
@@ -37,7 +46,11 @@ class File:
     self.inspection_attr = self.frontend.selectbox("Select the attribute to be analyzed in the Neural Network and Wordcloud", self.df.columns, key="inspection_attr")
     self.multip = self.frontend.slider("Select the size of the nodes", 1, 5)
     self.times = self.frontend.slider("Select the frequency of connections", 1, 10, 5)
-    
+
+  def is_possible_to_classify(self):
+    columns = [c for c in self.df.columns if pd.api.types.is_numeric_dtype(self.df[c])]
+    return len(columns) >= 8
+  
   def pre_processing_numbers(self, data):
     attributes_dummies = data.columns
     normalize = preprocessing.MinMaxScaler()
