@@ -15,19 +15,18 @@ class Classification:
 
   def __init__(self, name):
     self.name = name
-    match name:
-      case "Vegan": 
-        self.data = pd.read_excel("data/vegan_dataset.xlsx", sheet_name="Veganos") 
-        self.label = "Classification"
-      case "USDA": 
-        self.data = pd.read_excel("data/usda_condesed_categories.xlsx", sheet_name="Sheet1") 
-        self.label = "Category"
-      case "Gluten": 
-        self.data = pd.read_excel("data/gluten_dataset.xlsx", sheet_name="dataset") 
-        self.label = "Product"
-      case "Vegetarian/Vegan": 
-        self.data = pd.read_excel("data/veg_category_usda_dataset.xlsx", sheet_name="Sheet1") 
-        self.label = "vegCategory"
+    if name == "Vegan":
+      self.data = pd.read_excel("data/vegan_dataset.xlsx", sheet_name="Veganos")
+      self.label = "Classification"
+    elif name == "USDA":
+      self.data = pd.read_excel("data/usda_condesed_categories.xlsx", sheet_name="Sheet1")
+      self.label = "Category"
+    elif name == "Gluten":
+      self.data = pd.read_excel("data/gluten_dataset.xlsx", sheet_name="dataset")
+      self.label = "Product"
+    elif name == "Vegetarian/Vegan":
+      self.data = pd.read_excel("data/veg_category_usda_dataset.xlsx", sheet_name="Sheet1")
+      self.label = "vegCategory"
 
   def pre_processing(self, data):
     columns = [c for c in data.columns if pd.api.types.is_numeric_dtype(data[c])]
@@ -54,15 +53,14 @@ class Classification:
     prob = model.predict(X)
     predictions = np.argmax(prob, axis=1)
 
-    match self.name:
-      case "Vegan":
-        mapping = {0:'DAIRY', 1:'EGG', 2:'FISH', 3:'MEAT', 4:'PORK', 5:'POULTRY'}
-      case "USDA": 
-        mapping = {0:'Fruit', 1:'Grain', 2:'Milk and Dairy', 3:'Protein', 4:'Snacks and Desserts', 5:'Vegetable'}
-      case "Gluten": 
-        mapping = {0:'Gluten Containing', 1:'Gluten Free'}
-      case "Vegetarian-Vegan-Omni": 
-        mapping = {0:'OMNI', 1:'VEGAN', 2:'VEGETARIAN'}
+    if self.name == "Vegan":
+      mapping = {0: 'DAIRY', 1: 'EGG', 2: 'FISH', 3: 'MEAT', 4: 'PORK', 5: 'POULTRY'}
+    elif self.name == "USDA":
+      mapping = {0: 'Fruit', 1: 'Grain', 2: 'Milk and Dairy', 3: 'Protein', 4: 'Snacks and Desserts', 5: 'Vegetable'}
+    elif self.name == "Gluten":
+      mapping = {0: 'Gluten Containing', 1: 'Gluten Free'}
+    elif self.name == "Vegetarian-Vegan-Omni":
+      mapping = {0: 'OMNI', 1: 'VEGAN', 2: 'VEGETARIAN'}
     
     labeled_predictions = [mapping[key] for key in predictions]
     data['Predicted Label'] = labeled_predictions       

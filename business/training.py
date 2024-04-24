@@ -14,21 +14,20 @@ class Training:
 
   def __init__(self, name):
     self.name = name
-    match name:
-      case "Vegan": 
-        self.data = pd.read_excel("data/vegan_dataset.xlsx", sheet_name="Veganos") 
-        self.label = "Classification"
-        for i, row_label in enumerate(self.data[self.label]):
-          self.data.at[i,self.label] = re.sub(r'[0-9]+', "", row_label).strip()
-      case "USDA": 
-        self.data = pd.read_excel("data/usda_condesed_categories.xlsx", sheet_name="Sheet1") 
-        self.label = "Category"
-      case "Gluten": 
-        self.data = pd.read_excel("data/gluten_dataset.xlsx", sheet_name="dataset") 
-        self.label = "Product"
-      case "Vegetarian-Vegan-Omni": 
-        self.data = pd.read_excel("data/veg_category_usda_dataset.xlsx", sheet_name="Sheet1") 
-        self.label = "vegCategory"
+    if name == "Vegan":
+      self.data = pd.read_excel("data/vegan_dataset.xlsx", sheet_name="Veganos")
+      self.label = "Classification"
+      for i, row_label in enumerate(self.data[self.label]):
+        self.data.at[i, self.label] = re.sub(r'[0-9]+', "", row_label).strip()
+    elif name == "USDA":
+      self.data = pd.read_excel("data/usda_condesed_categories.xlsx", sheet_name="Sheet1")
+      self.label = "Category"
+    elif name == "Gluten":
+      self.data = pd.read_excel("data/gluten_dataset.xlsx", sheet_name="dataset")
+      self.label = "Product"
+    elif name == "Vegetarian-Vegan-Omni":
+      self.data = pd.read_excel("data/veg_category_usda_dataset.xlsx", sheet_name="Sheet1")
+      self.label = "vegCategory"
 
     self.pre_processing()
 
