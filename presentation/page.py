@@ -32,6 +32,10 @@ class Page:
     st.sidebar.divider()
     self.file.select_legend()
     st.sidebar.divider()
+    self.file.select_scatterplot()
+    st.sidebar.divider()
+    self.file.select_parallel_coordinates()
+    st.sidebar.divider()
     self.file.select_inspection_attr()
     self.file.pre_processing()
 
@@ -39,7 +43,8 @@ class Page:
 
     self.visualizations = Visualizations(st, self.file)
 
-    selected_points = plotly_events(self.visualizations.scatterplot_pca(), select_event=True, key="selected_points", override_height=650)
+    scatterplot_option = (self.visualizations.scatterplot_pca() if self.file.scatterplot_option == "PCA" else self.visualizations.scatterplot_tsne()) 
+    selected_points = plotly_events(scatterplot_option, select_event=True, key="selected_points", override_height=650)
     self.file.filter_dataframe(selected_points)
 
     col1, col2 = st.columns(2)

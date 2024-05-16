@@ -32,6 +32,12 @@ class File:
   def select_legend(self):
     self.legend = self.frontend.multiselect("Add attributes to the legend", [col for col in self.df.columns if (col not in self.attributes) and (col != self.label)], key="legend")
 
+  def select_scatterplot(self):
+    self.scatterplot_option = self.frontend.radio("Select scatterplot option", ["PCA", "t-SNE"])
+
+  def select_parallel_coordinates(self):
+    self.parallel_coordinates_option = self.frontend.radio("Select parallel coordinates option", ["Regular", "Mean"])
+
   def select_inspection_attr(self):
     self.inspection_attr = self.frontend.selectbox("Select the attribute to be analyzed in the Neural Network and Wordcloud", self.df.columns, key="inspection_attr")
     self.multip = self.frontend.slider("Select the size of the nodes", 1, 5)

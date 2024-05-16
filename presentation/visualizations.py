@@ -1,5 +1,6 @@
 from business.file import File
 import plotly.express as px
+from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA as sklearnPCA
 from wordcloud import WordCloud, STOPWORDS
 import matplotlib.pyplot as plt
@@ -25,12 +26,13 @@ class Visualizations:
     attributes = [column for column in self.file.attributes if self.file.type_of_columns[column] == "Numeric"]
 
     ## calculate the mean for each category
-    data_mean = data.groupby(label)[attributes].mean().reset_index()
+    if (self.file.parallel_coordinates_option == "Mean"):
+      data = data.groupby(label)[attributes].mean().reset_index()
 
     ## mapping only the categories selected
-    sorted_categories = sorted(data_mean[label].unique(), reverse=True)
+    sorted_categories = sorted(data[label].unique(), reverse=True)
     category_map = {category: i for i, category in enumerate(sorted_categories)}
-    data_mean['color_value'] = data_mean[label].map(category_map)
+    data['color_value'] = data[label].map(category_map)
     num_categories = len(sorted_categories)
 
     ## coloring all categories on the dataset
@@ -49,7 +51,7 @@ class Visualizations:
       color_continuous_scale.append((start, color))
       color_continuous_scale.append((end, color))
 
-    fig = px.parallel_coordinates(data_mean, 
+    fig = px.parallel_coordinates(data, 
                                   dimensions=attributes, 
                                   color='color_value', 
                                   color_continuous_scale=color_continuous_scale, 
@@ -113,6 +115,16 @@ class Visualizations:
     
     return self.create_scatterplot(X, y)
   
+  def scatterplot_tsne(self):
+    tsne = TSNE(n_components=2,perplexity=5,learning_rate=350,metric='euclidean', init='pca')
+    X_tsne = tsne.fit_transform(self.file.X)
+
+    X_tsne[1:4, :]
+    X = X_tsne[:,0]
+    y = X_tsne[:,1]
+    
+    return self.create_scatterplot(X, y)
+
   def pre_process(self, text):
     text = re.sub(r'[.,():%-]+', " ", text)
     text = re.sub(r'[\s]+', " ", text)
