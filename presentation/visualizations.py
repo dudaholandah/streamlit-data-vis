@@ -1,5 +1,6 @@
 from business.file import File
 import plotly.express as px
+from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA as sklearnPCA
 from wordcloud import WordCloud, STOPWORDS
 import matplotlib.pyplot as plt
@@ -16,43 +17,53 @@ class Visualizations:
   def __init__(self, st, file : File):
     self.frontend = st
     self.file = file
+    self.plotly_colors = px.colors.qualitative.Plotly + px.colors.qualitative.D3      
 
-  def scatterplot_matrix(self):
-    data = self.file.selected_data
+  def parallel_coordinates(self):
+    data_orig = self.file.selected_data.copy()
+    data = self.file.df_filtred.copy()
     label = self.file.label
     attributes = [column for column in self.file.attributes if self.file.type_of_columns[column] == "Numeric"]
-    
-    set_label = set()
 
-    for i in range(data.shape[0]):
-      set_label.add(data[label][i])
+    ## calculate the mean for each category
+    if (self.file.parallel_coordinates_option == "Mean"):
+      data = data.groupby(label)[attributes].mean().reset_index()
 
-    fig = px.scatter_matrix(data,
-      dimensions=attributes,
-      color=label,
-      category_orders={label: sorted(set_label)},
-      hover_data={col: True for col in self.file.legend}
-    )
+    ## mapping only the categories selected
+    sorted_categories = sorted(data[label].unique(), reverse=True)
+    category_map = {category: i for i, category in enumerate(sorted_categories)}
+    data['color_value'] = data[label].map(category_map)
+    num_categories = len(sorted_categories)
 
-    fig.update_traces(diagonal_visible=False)
-    return fig
-  
-  def pie_chart(self):
+    ## coloring all categories on the dataset
+    all_categories = sorted(data_orig[label].unique(), reverse=True)
+    reversed_colors = self.plotly_colors[:len(all_categories)][::-1]
+    num_colors = len(reversed_colors)
+    color_map = {category: reversed_colors[i % num_colors] for i, category in enumerate(all_categories)}
 
-    data = self.file.selected_data.copy()
-    label = self.file.label
+    ## for each category select the corresponding color (based on the original dataset)
+    color_continuous_scale = []
+    for i, category in enumerate(sorted_categories):
+      start = i / num_categories
+      end = (i + 1) / num_categories
+      color = color_map[category]
 
-    set_label = set()
+      color_continuous_scale.append((start, color))
+      color_continuous_scale.append((end, color))
 
-    for i in range(data.shape[0]):
-      set_label.add(data[label][i])
-      data['index'] = i
-
-    fig = px.pie(data, 
-      values='index', 
-      names=label, 
-      category_orders={label: sorted(set_label)},
-      hover_data={'index':False}
+    fig = px.parallel_coordinates(data, 
+                                  dimensions=attributes, 
+                                  color='color_value', 
+                                  color_continuous_scale=color_continuous_scale, 
+                                  labels={'color_value': label}, height=550)
+            
+    fig.update_layout(
+      coloraxis_colorbar=dict(
+        tickvals=[i for i in range(num_categories)],
+        ticktext=sorted_categories,
+        lenmode="pixels", len=300,
+      ),
+      margin=dict(l=50, r=50, t=50, b=50)
     )
 
     return fig
@@ -67,14 +78,19 @@ class Visualizations:
     hover_data['x'] = False
     hover_data['y'] = False
 
+    sorted_categories = sorted(set(self.file.y))
+
+    print(sorted_categories)
+
     fig = px.scatter(
       data, 
       x='x', 
       y='y', 
       color=label,
       template='plotly_white',
-      category_orders={ label: sorted(set(self.file.y))}, 
-      height=500,
+      color_discrete_sequence=self.plotly_colors,
+      category_orders={ label: sorted_categories}, 
+      height=650,
       hover_data=hover_data
     )
     
@@ -99,40 +115,21 @@ class Visualizations:
     
     return self.create_scatterplot(X, y)
   
+  def scatterplot_tsne(self):
+    tsne = TSNE(n_components=2,perplexity=5,learning_rate=350,metric='euclidean', init='pca')
+    X_tsne = tsne.fit_transform(self.file.X)
+
+    X_tsne[1:4, :]
+    X = X_tsne[:,0]
+    y = X_tsne[:,1]
+    
+    return self.create_scatterplot(X, y)
+
   def pre_process(self, text):
     text = re.sub(r'[.,():%-]+', " ", text)
     text = re.sub(r'[\s]+', " ", text)
     text = unidecode(text.strip().lower())
     return text
-
-  def create_wordcloud(self):
-
-    data = self.file.df_filtred
-    column = self.file.inspection_attr
-
-    comment_words = ''
-    vocab = set()
-    stopwords = set(STOPWORDS)
-
-    for text in data[column]:
-      tokens = text.split()
-      for i in range(len(tokens)):
-        vocab.add(self.pre_process(tokens[i]))
-
-    for word in vocab:
-      comment_words += " " + word + " "
-
-    wordcloud = WordCloud(width = 800, height = 500,
-                          background_color ='white',
-                          stopwords = stopwords,
-                          colormap='Set2',
-                          min_font_size = 10).generate(comment_words)
-    
-    
-    plt.imshow(wordcloud, interpolation='bilinear')
-    plt.axis("off")
-    
-    return plt
   
   def create_graph_network(self):
 
@@ -184,7 +181,7 @@ class Visualizations:
       node_y.append(random.randint(mn, mx)) 
 
     # create network
-    net = Network(height="450px")
+    net = Network(height="500px")
 
     for src, dest, count in edges:
       
