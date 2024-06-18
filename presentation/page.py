@@ -43,13 +43,19 @@ class Page:
 
     self.visualizations = Visualizations(st, self.file)
 
-    scatterplot_option = (self.visualizations.scatterplot_pca() if self.file.scatterplot_option == "PCA" else self.visualizations.scatterplot_tsne()) 
+    # scatter plot
+    scatterplot_option = (self.visualizations.scatterplot_pca() if self.file.scatterplot_option == "PCA" else self.visualizations.scatterplot_tsne())
+    st.subheader("Visualization 1: Scatter Plot") 
     selected_points = plotly_events(scatterplot_option, select_event=True, key="selected_points", override_height=650)
     self.file.filter_dataframe(selected_points)
 
+    # visualizations after the selection of points
     col1, col2 = st.columns(2)
+    
+    # network graph
     with col1:
       try:
+        st.subheader("Visualization 2: Network Graph") 
         graph = self.visualizations.create_graph_network()
         components.html(graph, height=520)
         st.sidebar.download_button(label='Download the Neural Network',
@@ -57,7 +63,9 @@ class Page:
                         file_name='graph_neural_network.html')
       except Exception as e: print(f"An error occurred: {e}")
     
+    # parallel coordinates
     with col2:
       try:
+        st.subheader("Visualization 3: Parallel Coordinates") 
         st.plotly_chart(self.visualizations.parallel_coordinates(), use_container_width=True)
       except Exception as e: print(f"An error occurred: {e}")

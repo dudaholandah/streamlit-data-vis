@@ -1,10 +1,7 @@
 import pandas as pd
 import openpyxl
-
-from sklearn import preprocessing
-import numpy as np
-from unidecode import unidecode
-import re
+from business.data_processing import DataProcessing
+from business.classification import Classification
 
 class File:
   def __init__(self, frontend):
@@ -24,81 +21,34 @@ class File:
       self.df = df 
 
   def select_label(self):
-    self.label = self.frontend.selectbox("Select the label", self.df.columns, key="label")
+    label = self.frontend.radio("Select the label category to color the points:", ['Dataset Column', 'Gluten', 'Vegetarian', 'Lactose'], key="choice")
+    if label == 'Dataset Column':
+      self.label = self.frontend.selectbox("Select the column from the dataset to color the points:", self.df.columns, key="label")
+    else:
+      classification = Classification(self.df)
+      self.label = classification.classify(label)
 
   def select_attributes(self):
-    self.attributes = self.frontend.multiselect("Select the attributes", [col for col in self.df.columns], key="attributes")
+    self.attributes = self.frontend.multiselect("Select the **Food Components** you would like to see in the Visualizations:", [col for col in self.df.columns], key="attributes")
 
   def select_legend(self):
-    self.legend = self.frontend.multiselect("Add attributes to the legend", [col for col in self.df.columns if (col not in self.attributes) and (col != self.label)], key="legend")
+    self.legend = self.frontend.multiselect("Select additional the **Food Components** for hover information:", [col for col in self.df.columns if (col not in self.attributes) and (col != self.label)], key="legend")
 
   def select_scatterplot(self):
-    self.scatterplot_option = self.frontend.radio("Select scatterplot option", ["PCA", "t-SNE"])
+    self.scatterplot_option = self.frontend.radio("Select a dimension reduction option for **Visualization 1**:", ["PCA", "t-SNE"], horizontal=True)
 
   def select_parallel_coordinates(self):
-    self.parallel_coordinates_option = self.frontend.radio("Select parallel coordinates option", ["Regular", "Mean"])
+    self.parallel_coordinates_option = self.frontend.radio("Select the display option for **Visualization 3**:", ["Regular", "Mean"], horizontal=True)
 
   def select_inspection_attr(self):
-    self.inspection_attr = self.frontend.selectbox("Select the attribute to be analyzed in the Neural Network and Wordcloud", self.df.columns, key="inspection_attr")
-    self.multip = self.frontend.slider("Select the size of the nodes", 1, 5)
-    self.times = self.frontend.slider("Select the frequency of connections", 1, 10, 5)
-  
-  def pre_processing_numbers(self, data):
-    attributes_dummies = data.columns
-    normalize = preprocessing.MinMaxScaler()
-    xscaled = normalize.fit_transform(data.values)
-    data_normalized = pd.DataFrame(xscaled,columns=attributes_dummies)
-    data_normalized = data_normalized.replace(np.nan,0)
-    return data_normalized
-  
-  def pre_process(self, text):
-    text = re.sub(r'[.,():%-]+', " ", text)
-    text = re.sub(r'[\s]+', " ", text)
-    text = unidecode(text.strip().lower())
-    return text
-  
-  def pre_processing_strings(self, data):
-    vocab = dict()
-    for att in data:
-      for obj in data[att]:
-        for word in obj.split(","):
-          word = self.pre_process(word)
-          if len(word) > 1 and word not in vocab: 
-            vocab[word] = len(vocab)
+    self.inspection_attr = self.frontend.selectbox("Select the column from the dataset to be analyzed in **Visualization 2**:", self.df.columns, key="inspection_attr")
+    self.multip = self.frontend.slider("Select **node size** proportional to number of connections:", 1, 5)
+    self.times = self.frontend.slider("Select the minimum **threshold** of connections:", 1, 10, 5)
 
-    vocab = sorted(vocab)
-    
-    ingredients_normalized = {}
+  def pre_processing(self): 
+    # define pre-processing class
+    data_preprocessing = DataProcessing()
 
-    for word in sorted(vocab):
-      ingredients_normalized[word] = []
-
-    for att in data:
-      for obj in data[att]:
-        aux = obj.split(",")
-        for i in range(len(aux)):
-          aux[i] = self.pre_process(aux[i])
-        for word in sorted(vocab):
-          if word in aux: ingredients_normalized[word].append(1)
-          else: ingredients_normalized[word].append(0)   
-
-    ingredients_normalized = pd.DataFrame(ingredients_normalized)
-
-    return ingredients_normalized
-
-  def define_type(self, column):
-    if pd.api.types.is_numeric_dtype(column):
-      return "Numeric"
-    elif column.apply(lambda x: isinstance(x, str) and x.startswith('[') and x.endswith(']')).mode()[0]:
-      return "List of strings"
-    elif column.apply(lambda x: isinstance(x, str) and ',' in x).mode()[0]:
-      return "Comma-separated string"
-    elif column.apply(lambda x: isinstance(x, str)).mode()[0]:
-      return "Simple string"
-    else:
-      return "Unknown type"
-
-  def pre_processing(self):    
     # define data
     if self.label in self.attributes: self.attributes.remove(self.label) 
     self.data_attr = self.df[self.attributes].copy()
@@ -106,15 +56,15 @@ class File:
     self.data_legend = self.df[self.legend].copy()
 
     # define type
-    self.type_of_columns = {column: self.define_type(self.df[column]) for column in self.df.columns}
+    self.type_of_columns = {column: data_preprocessing.define_type(self.df[column]) for column in self.df.columns}
     filtered_type_of_columns = {column: column_type for column, column_type in self.type_of_columns.items() if column in self.attributes}
     numeric_types = [column for column, column_type in filtered_type_of_columns.items() if column_type == "Numeric"]
     string_types = [column for column, column_type in filtered_type_of_columns.items() if column_type != "Numeric" and column_type != "Unknown type"]
     
     # pre-processing numbers into a [0,1] range
-    self.data_attr_normalized = self.pre_processing_numbers(self.df[self.df.columns.intersection(numeric_types)])
+    self.data_attr_normalized = data_preprocessing.pre_processing_numbers(self.df[self.df.columns.intersection(numeric_types)])
     # pre-processing strings into one-hot-encoding
-    self.data_attr_normalized = self.data_attr_normalized.join(self.pre_processing_strings(self.df[self.df.columns.intersection(string_types)]))
+    self.data_attr_normalized = self.data_attr_normalized.join(data_preprocessing.pre_processing_strings(self.df[self.df.columns.intersection(string_types)]))
 
     # pre-processing label
     for i in range(self.data_label.shape[0]):
