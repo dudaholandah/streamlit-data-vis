@@ -2,8 +2,6 @@ from business.file import File
 import plotly.express as px
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA as sklearnPCA
-from wordcloud import WordCloud, STOPWORDS
-import matplotlib.pyplot as plt
 from unidecode import unidecode
 import re
 from itertools import combinations
@@ -80,8 +78,6 @@ class Visualizations:
 
     sorted_categories = sorted(set(self.file.y))
 
-    print(sorted_categories)
-
     fig = px.scatter(
       data, 
       x='x', 
@@ -97,7 +93,8 @@ class Visualizations:
     fig.update_layout(xaxis_title="",
       yaxis_title="",
       xaxis=dict(ticks="outside", mirror=True, showline=True),
-      yaxis=dict(ticks="outside", mirror=True, showline=True)
+      yaxis=dict(ticks="outside", mirror=True, showline=True),
+      margin=dict(l=0, r=0, b=50, t=30),
     )
     
     fig.update_xaxes(ticklen=0, showticklabels=False)
