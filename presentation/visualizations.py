@@ -61,7 +61,7 @@ class Visualizations:
         ticktext=sorted_categories,
         lenmode="pixels", len=300,
       ),
-      margin=dict(l=50, r=50, t=50, b=50)
+      margin=dict(l=40, r=0, t=50, b=50)
     )
 
     return fig
@@ -179,6 +179,7 @@ class Visualizations:
 
     # create network
     net = Network(height="500px")
+    net_to_download = Network(height="850px")
 
     for src, dest, count in edges:
       
@@ -193,7 +194,14 @@ class Visualizations:
       net.add_node(dest, size=num_dest*multip)
       net.add_edge(src, dest)
 
-    net.save_graph("data/graph.html")
-    html_file = open("data/graph.html", 'r', encoding='utf-8')
-    source_code = html_file.read() 
-    return source_code
+      net_to_download.add_node(src, size=num_src*multip)
+      net_to_download.add_node(dest, size=num_dest*multip)
+      net_to_download.add_edge(src, dest)
+
+    net.save_graph("data/graph_to_display.html")
+    net_to_download.save_graph("data/graph_to_download.html")
+    html_file_display = open("data/graph_to_display.html", 'r', encoding='utf-8')
+    html_file_download = open("data/graph_to_download.html", 'r', encoding='utf-8')
+    source_code_display = html_file_display.read() 
+    source_code_download = html_file_download.read() 
+    return source_code_display, source_code_download

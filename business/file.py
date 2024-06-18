@@ -38,10 +38,10 @@ class File:
     self.scatterplot_option = self.frontend.radio("Select a dimension reduction option for **Visualization 1**:", ["PCA", "t-SNE"], horizontal=True)
 
   def select_parallel_coordinates(self):
-    self.parallel_coordinates_option = self.frontend.radio("Select the display option for **Visualization 3**:", ["Display All Selection", "Display Mean Values"], horizontal=True)
+    self.parallel_coordinates_option = self.frontend.radio("Select the display option for **Visualization 2**:", ["Display All Selection", "Display Mean Values"], horizontal=True)
 
   def select_inspection_attr(self):
-    self.inspection_attr = self.frontend.selectbox("Select the column from the dataset to be analyzed in **Visualization 2**:", self.df.columns, key="inspection_attr")
+    self.inspection_attr = self.frontend.selectbox("Select the column from the dataset to be analyzed in **Visualization 3**:", self.df.columns, key="inspection_attr")
     self.multip = self.frontend.slider("Select **node size** proportional to number of connections:", 1, 5)
     self.times = self.frontend.slider("Select the minimum **threshold** of connections:", 1, 10, 5)
 

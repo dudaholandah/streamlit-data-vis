@@ -51,21 +51,21 @@ class Page:
 
     # visualizations after the selection of points
     col1, col2 = st.columns(2)
-    
-    # network graph
+
+    # parallel coordinates
     with col1:
       try:
-        st.subheader("Visualization 2: Network Graph") 
-        graph = self.visualizations.create_graph_network()
-        components.html(graph, height=520)
-        st.sidebar.download_button(label='Download the Neural Network',
-                        data=graph,
-                        file_name='graph_neural_network.html')
+        st.subheader("Visualization 2: Parallel Coordinates") 
+        st.plotly_chart(self.visualizations.parallel_coordinates(), use_container_width=True)
       except Exception as e: print(f"An error occurred: {e}")
     
-    # parallel coordinates
+    # network graph
     with col2:
       try:
-        st.subheader("Visualization 3: Parallel Coordinates") 
-        st.plotly_chart(self.visualizations.parallel_coordinates(), use_container_width=True)
+        st.subheader("Visualization 3: Graph Network") 
+        graph_display, graph_download = self.visualizations.create_graph_network()
+        components.html(graph_display, height=520)
+        st.sidebar.download_button(label='Download Graph Network',
+                        data=graph_download,
+                        file_name='graph_network_result.html')
       except Exception as e: print(f"An error occurred: {e}")
