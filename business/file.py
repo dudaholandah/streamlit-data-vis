@@ -38,7 +38,7 @@ class File:
     self.scatterplot_option = self.frontend.radio("Select a dimension reduction option for **Visualization 1**:", ["PCA", "t-SNE"], horizontal=True)
 
   def select_parallel_coordinates(self):
-    self.parallel_coordinates_option = self.frontend.radio("Select the display option for **Visualization 3**:", ["Regular", "Mean"], horizontal=True)
+    self.parallel_coordinates_option = self.frontend.radio("Select the display option for **Visualization 3**:", ["Display All Selection", "Display Mean Values"], horizontal=True)
 
   def select_inspection_attr(self):
     self.inspection_attr = self.frontend.selectbox("Select the column from the dataset to be analyzed in **Visualization 2**:", self.df.columns, key="inspection_attr")

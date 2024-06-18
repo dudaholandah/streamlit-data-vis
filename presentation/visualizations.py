@@ -24,7 +24,7 @@ class Visualizations:
     attributes = [column for column in self.file.attributes if self.file.type_of_columns[column] == "Numeric"]
 
     ## calculate the mean for each category
-    if (self.file.parallel_coordinates_option == "Mean"):
+    if (self.file.parallel_coordinates_option == "Display Mean Values"):
       data = data.groupby(label)[attributes].mean().reset_index()
 
     ## mapping only the categories selected
