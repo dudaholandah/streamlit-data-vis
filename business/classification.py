@@ -13,13 +13,12 @@ class Classification:
 
 
   def classify(self, name):
-    match name:
-      case "Vegetarian":
-        return self.classify_vegetarian()
-      case "Gluten":
-        return self.classify_gluten()
-      case "Lactose":
-        return self.classify_lactose()
+    if name == "Vegetarian":
+      return self.classify_vegetarian()
+    elif name == "Gluten":
+      return self.classify_gluten()
+    elif name == "Lactose":
+      return self.classify_lactose()
         
 
   def classify_gluten(self):   
