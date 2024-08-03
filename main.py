@@ -24,9 +24,9 @@ def render_global_visualization():
   if st.session_state['global_vis_ready'] == False:
     return
     
-  # define point based visualization
   visualizations = Visualizations()
 
+   # define point based visualization 
   if st.session_state['scatterplot_option'] == "PCA":
     scatterplot_vis, variance = visualizations.scatterplot_pca()
   else:
@@ -35,18 +35,24 @@ def render_global_visualization():
   st.subheader("Visualization 1: Point based visualization") 
   st.caption("Select a sample of points to be analyzed")
 
+  # plot PCA metrics
   if st.session_state['scatterplot_option'] == "PCA":
     col1, col2, col3 = st.columns(3)
     col1.metric(label='Total Explained Variance', value=f"{variance.sum()* 100:.2f}%")
     col2.metric(label='Principal Component 1 Explained Variance', value=f"{variance[0]* 100:.2f}%")
     col3.metric(label='Principal Component 2 Explained Variance', value=f"{variance[1]* 100:.2f}%")
 
+  # select value for label
   if st.session_state['label'] == st.session_state['created_label']:
-    st.text_input('Type the next value of the label you created:', key='new_label')
+    is_creating_label = st.checkbox("Do you want to select the points to label them?")
+    if is_creating_label:
+      st.text_input('Type the next value of the label you created:', key='new_label')
+  else:
+    is_creating_label = False
   
   # plot visualization filter points
   selected_points = plotly_events(scatterplot_vis, select_event=True, override_height=650, key='selected_points')  
-  update_state(selected_points)
+  update_state(selected_points, is_creating_label)
 
 
 def render_local_visualizations():
@@ -54,7 +60,6 @@ def render_local_visualizations():
   if st.session_state['local_vis_ready'] == False:
     return
   
-
   visualizations = Visualizations()
   
   # visualizations after the selection of points
@@ -81,21 +86,15 @@ def render_local_visualizations():
   st.subheader("Selected points")
   st.write(st.session_state['df_filtered'])
 
-def render_statistics():
+def render_metrics():
 
   col1, col2 = st.columns(2)
 
-  if st.session_state['global_vis_ready'] == False:
-    return
+  if st.session_state['global_vis_ready']:
+    col1.metric(label='Number of dataset instances', value=len(st.session_state['df']))
 
-  with col1:
-    st.metric(label='Number of dataset instances', value=len(st.session_state['df']))
-
-  if st.session_state['local_vis_ready'] == False:
-    return
-
-  with col2:
-    st.metric(label='Number of sample instances', value=len(st.session_state['df_filtered']))
+  if st.session_state['local_vis_ready']:
+    col2.metric(label='Number of sample instances', value=len(st.session_state['df_filtered']))
 
 
 def render_interface():
@@ -107,12 +106,9 @@ def pre_processing():
 def main():
   render_interface()
   pre_processing()
-  render_statistics()
+  render_metrics()
   render_global_visualization()
-  # update_state(current_query)
-  # try:
   render_local_visualizations()
-  # except Exception as e: print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
   initialize_state()

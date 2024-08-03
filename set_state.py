@@ -19,11 +19,11 @@ def clear_state():
   st.session_state['global_vis_ready'] = False
   st.session_state['local_vis_ready'] = False
 
-def update_state(current_query):
+def update_state(current_query, is_creating_label):
   rerun = False
   if current_query != st.session_state['selected_points_query']:
     st.session_state['selected_points_query'] = current_query
     rerun = True
   if rerun:
-    filter_dataframe(current_query, st.session_state['label'] == st.session_state['created_label']) 
+    filter_dataframe(current_query, is_creating_label) 
     st.experimental_rerun()
