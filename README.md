@@ -24,4 +24,4 @@ Visit [Nutritional Data Visualization](https://nutritional-data-visualization.st
 
 3. Run the project 
    
-```streamlit run dashboard.py```
+```streamlit run main.py```
