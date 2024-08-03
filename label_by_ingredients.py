@@ -1,16 +1,14 @@
 import pandas as pd
-from business.data_processing import DataProcessing
-from business.classification_data import *
+from auxiliary_functions import *
+from label_data import *
 
-class Classification:
-  def __init__(self, df : pd.DataFrame):
+class LabelByIngredients:
+  def __init__(self):
     # init
-    self.df = df
-    self.data_preprocessing = DataProcessing()
+    self.df = st.session_state['df']
     # define columns to look at
-    type_of_columns = {column: self.data_preprocessing.define_type(self.df[column]) for column in self.df.columns}
+    type_of_columns = {column: define_type(self.df[column]) for column in self.df.columns}
     self.string_type_columns = [column for column, column_type in type_of_columns.items() if column_type == "List of strings" or column_type == "Comma-separated string"]
-
 
   def classify(self, name):
     if name == "Vegetarian":
@@ -19,7 +17,6 @@ class Classification:
       return self.classify_gluten()
     elif name == "Lactose":
       return self.classify_lactose()
-        
 
   def classify_gluten(self):   
     # init result
@@ -29,7 +26,7 @@ class Classification:
       for idx, row in self.df.iterrows():
         ingredients_list = [ingredient.strip() for ingredient in row[column].split(',')]
         for ingredient in ingredients_list:
-          ingredient = self.data_preprocessing.pre_process(ingredient)
+          ingredient = pre_process_string(ingredient)
           if ingredient in gluten_containing_ingredients:
             self.df.at[idx, 'Gluten Classification'] = 'Gluten Containing'
           else:
@@ -48,7 +45,7 @@ class Classification:
       for idx, row in self.df.iterrows():
         ingredients_list = [ingredient.strip() for ingredient in row[column].split(',')]
         for ingredient in ingredients_list:
-          ingredient = self.data_preprocessing.pre_process(ingredient)
+          ingredient = pre_process_string(ingredient)
           if ingredient in lactose_containing_ingredients:
             self.df.at[idx, 'Lactose Classification'] = 'Lactose Containing'
 
@@ -62,7 +59,7 @@ class Classification:
       for idx, row in self.df.iterrows():
         ingredients_list = [ingredient.strip() for ingredient in row[column].split(',')]
         for ingredient in ingredients_list:
-          ingredient = self.data_preprocessing.pre_process(ingredient)
+          ingredient = pre_process_string(ingredient)
           if ingredient in non_vegetarian_ingredients:
             self.df.at[idx, 'Vegetarian Classification'] = 'Non Vegetarian'
 
