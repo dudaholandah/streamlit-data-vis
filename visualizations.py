@@ -10,6 +10,7 @@ import networkx as nx
 import random
 import streamlit as st
 from auxiliary_functions import *
+import umap
 
 class Visualizations:
 
@@ -79,6 +80,17 @@ class Visualizations:
     
     return self.create_scatterplot(X, y, "t-SNE Visualization")
   
+  def scatterplot_umap(self):
+
+    reducer = umap.UMAP(n_components=2,n_neighbors=10, min_dist=0.1,metric='euclidean', random_state=0)
+    X_umap = reducer.fit_transform(st.session_state['X'])
+
+    X_umap[1:4, :]
+    X = X_umap[:,0]
+    y = X_umap[:,1]
+    
+    return self.create_scatterplot(X, y, "UMAP Visualization")
+  
   def parallel_coordinates(self):
 
 
@@ -88,8 +100,6 @@ class Visualizations:
     label = st.session_state['label']
     type_of_columns = {column: define_type(entire_data[column]) for column in entire_data.columns}
     attributes = [column for column in st.session_state['selected_attributes'] if type_of_columns[column] == "Numeric"]
-
-    print(filtered_data)
 
     ## calculate the mean for each category
     if (st.session_state['parallel_coordinates_option'] == "Display Mean Values"):
@@ -137,19 +147,22 @@ class Visualizations:
   def create_graph_network(self):
 
     data = st.session_state['df_filtered']
-    column = st.session_state['inspection_attr']
+    column = 'Ingredients'
+    edge_count = st.session_state['edge_count']
     times = st.session_state['times']
-    multip = st.session_state['multip']
+
+    if column not in st.session_state['df_filtered'].columns:
+      return st.error("You need a column named **Ingredients** to be able to see this Visualization", icon="🚨")
 
     data_ingredients = [x.split(',') for x in data[column]]
-    ignore_ingredients = ['water', 'salt']
+    ignore_ingredients = st.session_state['ingredients_to_ignore']
 
     # pre processando ingredientes
     for lst in data_ingredients:
       for idx, each in enumerate(lst):
         lst[idx] = pre_process_string(each)
 
-    # removendo ingredientes que nao quero
+    # # removendo ingredientes que nao quero
     for lst in data_ingredients:
       for idx, each in enumerate(lst):
         if each in ignore_ingredients:
@@ -196,13 +209,17 @@ class Visualizations:
         if src in e: num_src += 1
         if dest in e: num_dest += 1
 
-      net.add_node(src, size=num_src*multip)
-      net.add_node(dest, size=num_dest*multip)
-      net.add_edge(src, dest)
+      net.add_node(src, size=num_src)
+      net.add_node(dest, size=num_dest)
+      net_to_download.add_node(src, size=num_src)
+      net_to_download.add_node(dest, size=num_dest)
 
-      net_to_download.add_node(src, size=num_src*multip)
-      net_to_download.add_node(dest, size=num_dest*multip)
-      net_to_download.add_edge(src, dest)
+      if edge_count:
+        net.add_edge(src, dest, value=count)
+        net_to_download.add_edge(src, dest, value=count)
+      else:
+        net.add_edge(src, dest)
+        net_to_download.add_edge(src, dest)
 
     net.save_graph("data/graph_to_display.html")
     net_to_download.save_graph("data/graph_to_download.html")

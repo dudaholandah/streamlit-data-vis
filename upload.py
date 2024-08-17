@@ -3,6 +3,7 @@ import openpyxl
 import streamlit as st
 from set_state import *
 from label_by_ingredients import *
+from streamlit_tags import st_tags_sidebar
 
 class Upload:
   def __init__(self):
@@ -11,7 +12,7 @@ class Upload:
     self.select_label()
     st.sidebar.divider()
     self.select_attributes()
-    st.sidebar.divider()
+    # st.sidebar.divider()
     self.select_legend()
     st.sidebar.divider()
     self.select_scatterplot()
@@ -44,7 +45,9 @@ class Upload:
       clear_state()
 
   def select_label(self):
-    label_category = st.sidebar.radio("Select the label category to color the points:", ['Dataset Column', 'Create New Label', 'Gluten', 'Vegetarian', 'Lactose'], key="choice")
+    st.sidebar.write("**Label/Category** to color the points:")
+    label_category = st.sidebar.radio("Select how you would like to aggregate the products in the dataset:", 
+                                      ['Dataset Column', 'Create Label', 'Gluten', 'Vegetarian', 'Lactose'], key="choice")
     
     # select a label from the dataset to color the points
     if label_category == 'Dataset Column':
@@ -55,41 +58,61 @@ class Upload:
       if ('label' not in st.session_state) or (st.session_state['label'] != label):
         st.session_state['label'] = label
     # self color the dataset
-    elif label_category == 'Create New Label':
+    elif label_category == 'Create Label':
       # create the name of the color to be created
-      new_label = st.sidebar.text_input("Create a new label for your dataset:", key="created_label")
+      new_label = st.sidebar.text_input("Create a new label for your dataset:", placeholder='New Label')
       # save on session state
-      if ('label' not in st.session_state) or (st.session_state['label'] != new_label):
+      if 'label' not in st.session_state or st.session_state['label'] != new_label:
+        if new_label == '': new_label = 'New Label'
+        
+        st.session_state['created_label'] = new_label
         st.session_state['label'] = new_label
         st.session_state['df'][new_label] = 'Unlabeled'
+        clean_df_state()
+      # create a csv to download
+      download_df_csv()
     else:
       label_by_ing = LabelByIngredients()
       label = label_by_ing.classify(label_category)
       if ('label' not in st.session_state) or (st.session_state['label'] != label):
         st.session_state['label'] = label
-
-
+        clean_df_state()
+      # create a csv to download
+      download_df_csv()
 
   def select_attributes(self):
-    st.sidebar.multiselect("Select the **Food Components** you would like to see in the Visualizations:", 
+    st.sidebar.write("**Food Components** in the Visualizations:")
+    st.sidebar.multiselect("Select the components you would like to consider in the analysis:", 
                            [col for col in st.session_state['df'].columns], key="selected_attributes")
 
   def select_legend(self):
-    st.sidebar.multiselect("Select additional the **Food Components** for hover information:", 
+    st.sidebar.multiselect("Select additional components for hover information:", 
                            [col for col in st.session_state['df'].columns 
                             if (col not in st.session_state['selected_attributes']) 
                             and (col != st.session_state['label'])], key="legend_attributes")
 
   def select_scatterplot(self):
-    st.sidebar.radio("Select a dimension reduction option for **Visualization 1**:", ["PCA", "t-SNE"], 
+    st.sidebar.write("For **Visualization 1**:")
+    st.sidebar.radio("Select a dimension reduction option:", ["PCA", "t-SNE"], 
                      horizontal=True, key='scatterplot_option')
 
   def select_parallel_coordinates(self):
-    st.sidebar.radio("Select the display option for **Visualization 2**:", ["Display All Selection", "Display Mean Values"], 
+    st.sidebar.write("For **Visualization 2**:")
+    st.sidebar.radio("Select the display option:", ["Display All Selection", "Display Mean Values"], 
                      horizontal=True,  key='parallel_coordinates_option')
 
   def select_inspection_attr(self):
-    st.sidebar.selectbox("Select the column from the dataset to be analyzed in **Visualization 3**:", 
-                         st.session_state['df'].columns, key="inspection_attr")
-    st.sidebar.slider("Select **node size** proportional to number of connections:", 1, 5, key="multip")
+    st.sidebar.write("For **Visualization 3**:")
+
     st.sidebar.slider("Select the minimum **threshold** of connections:", 1, 10, 5, key="times")
+
+    suggestions_list = ([] if 'Ingredients' not in st.session_state['df'].columns
+                          else vocab_list(st.session_state['df']['Ingredients']))
+    st_tags_sidebar(
+      label="Select the **Ingredients** you don't want to see in the visualization:",
+      text='Press enter to add more',
+      suggestions=suggestions_list,
+      key='ingredients_to_ignore'
+    )
+
+    st.sidebar.checkbox("Select to add weight to the edges", key='edge_count')

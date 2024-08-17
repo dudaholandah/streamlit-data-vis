@@ -12,7 +12,8 @@ def initialize_state():
     st.session_state['local_vis_ready'] = False
 
   if 'created_label' not in st.session_state:
-    st.session_state['created_label'] = 'New label' 
+    st.session_state['created_label'] = 'New Label'
+
 
 def clear_state():    
   st.session_state['selected_points_query'] = []
@@ -27,3 +28,13 @@ def update_state(current_query, is_creating_label):
   if rerun:
     filter_dataframe(current_query, is_creating_label) 
     st.experimental_rerun()
+
+def clean_df_state():
+  if len(st.session_state['df'].columns) >  len(st.session_state['uploaded_df'].columns) + 1:
+    st.session_state['df'].drop(st.session_state['df'].columns[-2], axis=1, inplace=True)
+
+def download_df_csv():
+  download_df = st.session_state['df'].to_csv().encode('latin-1', 'ignore')
+  st.sidebar.download_button(label='Download the labeled Dataset',
+                    data=download_df,
+                    file_name='new_labeled_dataframe.csv')
