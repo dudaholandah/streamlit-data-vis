@@ -23,6 +23,17 @@ def define_type(column):
   else:
     return "Unknown type"
 
+def vocab_list(data):
+  vocab = dict()
+  for obj in data:
+    for word in obj.split(","):
+      word = pre_process_string(word)
+      if len(word) > 1 and word not in vocab: 
+        vocab[word] = len(vocab)
+
+  vocab = sorted(vocab)
+  return vocab
+
 def pre_processing_strings(data):
   vocab = dict()
   for att in data:
@@ -33,10 +44,9 @@ def pre_processing_strings(data):
           vocab[word] = len(vocab)
 
   vocab = sorted(vocab)
-
   ingredients_normalized = {}
 
-  for word in sorted(vocab):
+  for word in vocab:
     ingredients_normalized[word] = []
 
   for att in data:
@@ -44,7 +54,7 @@ def pre_processing_strings(data):
       aux = obj.split(",")
       for i in range(len(aux)):
         aux[i] = pre_process_string(aux[i])
-      for word in sorted(vocab):
+      for word in vocab:
         if word in aux: ingredients_normalized[word].append(1)
         else: ingredients_normalized[word].append(0)   
 
@@ -84,4 +94,3 @@ def filter_dataframe(selected_points, creating_label=False):
   df_filtered = df_filtered.drop(['x', 'y'], axis=1)
   st.session_state['df_filtered'] = df_filtered
   st.session_state['local_vis_ready'] = True
-

@@ -9,12 +9,6 @@ class DataProcessing:
   
   def pre_processing(self): 
 
-    if st.session_state['label'] == st.session_state['created_label'] and st.session_state['label'] == "":
-      st.error("Don't forget to name the label on the sidebar!", icon="🚨")
-      st.session_state['global_vis_ready'] = False
-      st.session_state['local_vis_ready'] = False
-      return
-
     # if the data is null initialize state and skip function
     if len(st.session_state['selected_attributes']) < 2:
       st.session_state['global_vis_ready'] = False
@@ -27,7 +21,7 @@ class DataProcessing:
     label = st.session_state['label']
     selected_attributes = st.session_state['selected_attributes']
     legend_attributes = st.session_state['legend_attributes']
-    inspection_attr = st.session_state['inspection_attr']
+    inspection_attr = 'Ingredients'
     
     # dataframes to be used
     data_legend = df[legend_attributes].copy()

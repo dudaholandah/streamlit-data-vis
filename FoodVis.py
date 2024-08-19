@@ -51,7 +51,8 @@ def render_global_visualization():
     is_creating_label = False
   
   # plot visualization filter points
-  selected_points = plotly_events(scatterplot_vis, select_event=True, override_height=650, key='selected_points')  
+  selected_points = plotly_events(scatterplot_vis, select_event=True, override_height=650, key='selected_points')
+
   update_state(selected_points, is_creating_label)
 
 
