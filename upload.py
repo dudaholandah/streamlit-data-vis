@@ -60,10 +60,9 @@ class Upload:
     # self color the dataset
     elif label_category == 'Create Label':
       # create the name of the color to be created
-      new_label = st.sidebar.text_input("Create a new label for your dataset:", placeholder='New Label')
+      new_label = st.sidebar.text_input("Create a new label for your dataset:", value='New Label', placeholder='Type a new value')
       # save on session state
       if 'label' not in st.session_state or st.session_state['label'] != new_label:
-        if new_label == '': new_label = 'New Label'
         
         st.session_state['created_label'] = new_label
         st.session_state['label'] = new_label
