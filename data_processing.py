@@ -58,7 +58,9 @@ class DataProcessing:
     selected_data = merge(data_attr, data_label, data_legend)
     selected_data_normalized = merge(data_attr_normalized, data_label, data_legend)
 
-    if inspection_attr not in selected_attributes and inspection_attr != label:
+    if inspection_attr not in selected_attributes and \
+       inspection_attr not in legend_attributes and \
+       inspection_attr != label:
       data_inspect = df[inspection_attr].copy()
       selected_data = selected_data.join(data_inspect)
       selected_data_normalized = selected_data_normalized.join(data_inspect)

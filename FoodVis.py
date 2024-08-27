@@ -1,6 +1,7 @@
 import pandas as pd
 from upload import *
 from data_processing import *
+from auxiliary_functions import *
 from visualizations import *
 from streamlit_plotly_events import plotly_events
 import streamlit.components.v1 as components
@@ -19,6 +20,51 @@ st.markdown("""
   </style>
   """, unsafe_allow_html=True)
 
+def filter_points():
+  category_points = st.multiselect("Select the points based on their Category (color)", sorted(st.session_state['df'][st.session_state.label].unique()))
+  if category_points:
+    selected_points_by_category = st.session_state['df'][st.session_state['df'][st.session_state.label].isin(category_points)]
+  else:
+    selected_points_by_category = pd.DataFrame()
+
+  ingredients_points = st.multiselect("Select the points based on their Ingredients", 
+                                      [] if 'Ingredients' not in st.session_state['df'].columns
+                                      else vocab_list(st.session_state['df']['Ingredients']), 
+                                      placeholder="Type or search the ingredient")
+  if ingredients_points:
+    copy_of_df = st.session_state['df'].copy()
+    ## this way we select a substring
+    # copy_of_df['Processed_Ingredients'] = st.session_state['df']['Ingredients'].apply(lambda x: pre_process_string(x))
+    # selected_points_by_ingredients = copy_of_df[copy_of_df['Processed_Ingredients']
+    #                                  .apply(lambda x: any(ingredient in x for ingredient in ingredients_points))]
+    # copy_of_df.drop('Processed_Ingredients', axis=1, inplace=True)
+    
+    ## this way we select the exact word split by comma
+    filtered_rows = []
+    for i, ingredients in enumerate(copy_of_df['Ingredients']):
+      list_of_ingredients = ingredients.split(',')
+      for word in list_of_ingredients:
+        processed_word = pre_process_string(word)
+        if processed_word in ingredients_points:
+          filtered_rows.append(copy_of_df.iloc[i])
+          break
+
+    selected_points_by_ingredients = pd.DataFrame(filtered_rows)    
+  else:
+    selected_points_by_ingredients = pd.DataFrame()
+
+  ## this way we select the inner join of category and ingredients selection
+  # if selected_points_by_category.empty:
+  #   selected_points_multiselect = selected_points_by_ingredients.copy()
+  # elif selected_points_by_ingredients.empty:
+  #   selected_points_multiselect = selected_points_by_category.copy()
+  # else:
+  #   selected_points_multiselect = selected_points_by_category[selected_points_by_category.index.isin(selected_points_by_ingredients.index)]
+  
+  ## this way we select the outter join of category and ingredients selection
+  selected_points_multiselect = pd.concat([selected_points_by_category, selected_points_by_ingredients])
+  return selected_points_multiselect
+
 def render_global_visualization():
 
   if st.session_state['global_vis_ready'] == False:
@@ -26,7 +72,7 @@ def render_global_visualization():
     
   visualizations = Visualizations()
 
-   # define point based visualization 
+  # define point based visualization 
   if st.session_state['scatterplot_option'] == "PCA":
     scatterplot_vis, variance = visualizations.scatterplot_pca()
   else:
@@ -50,10 +96,14 @@ def render_global_visualization():
   else:
     is_creating_label = False
   
-  # plot visualization filter points
+  # plot and filter points in the visualization 
   selected_points = plotly_events(scatterplot_vis, select_event=True, override_height=650, key='selected_points')
+  points_dataframe = selected_points_to_dataframe(selected_points)
 
-  update_state(selected_points, is_creating_label)
+  # filter points based on their category or ingredients
+  selected_points_multiselect = filter_points()
+
+  update_state(points_dataframe if not points_dataframe.empty else selected_points_multiselect, is_creating_label)
 
 
 def render_local_visualizations():
@@ -76,10 +126,10 @@ def render_local_visualizations():
   # network graph
   with col2:
     try:
-      st.subheader("Visualization 3: Graph Network") 
+      st.subheader("Visualization 3: Graph based visualization") 
       graph_display, graph_download = visualizations.create_graph_network()
       components.html(graph_display, height=520)
-      st.sidebar.download_button(label='Download Graph Network',
+      st.sidebar.download_button(label='Download Network Graph',
                       data=graph_download,
                       file_name='graph_network_result.html')
     except Exception as e: print(f"An error occurred: {e}")

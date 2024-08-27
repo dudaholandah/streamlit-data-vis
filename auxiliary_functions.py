@@ -70,27 +70,39 @@ def pre_processing_numbers(data):
   data_normalized = data_normalized.replace(np.nan,0)
   return data_normalized
 
-def filter_dataframe(selected_points, creating_label=False):
-
+def selected_points_to_dataframe(selected_points):
   if selected_points == []: 
-    st.session_state['df_filtered'] = pd.DataFrame()
-    return
-
+    return pd.DataFrame()
+  
   data = st.session_state['selected_data']
-  df = st.session_state['df']
   selected_rows = []
   selected_idx = set()
 
   for i in data.index:
     for pt in selected_points:
       if abs(data['x'][i] - pt['x']) < 1e-4 and abs(data['y'][i] - pt['y']) < 1e-4 and i not in selected_idx:
-        if creating_label:
-          data.loc[i, st.session_state['label']] = st.session_state['new_label']
-          df.loc[i, st.session_state['label']] = st.session_state['new_label']
         selected_idx.add(i)
         selected_rows.append(pd.DataFrame([data.iloc[i]]))
 
-  df_filtered = pd.concat(selected_rows, ignore_index=False)
-  df_filtered = df_filtered.drop(['x', 'y'], axis=1)
-  st.session_state['df_filtered'] = df_filtered
+  points_dataframe = pd.concat(selected_rows, ignore_index=False)
+  points_dataframe = points_dataframe.drop(['x', 'y'], axis=1)
+  return points_dataframe
+
+
+def filter_dataframe(points_dataframe : pd.DataFrame, creating_label=False):
+
+  if points_dataframe.empty:
+    print("DataFrame is Empty!!!")
+    st.session_state['df_filtered'] = pd.DataFrame()
+    return
+
+  data = st.session_state['selected_data']
+  df = st.session_state['df']
+
+  for i in points_dataframe.index:
+    if creating_label:
+      data.loc[i, st.session_state['label']] = st.session_state['new_label']
+      df.loc[i, st.session_state['label']] = st.session_state['new_label']
+
+  st.session_state['df_filtered'] = points_dataframe.copy()
   st.session_state['local_vis_ready'] = True
