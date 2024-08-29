@@ -115,4 +115,3 @@ class Upload:
                             placeholder="Type or search the ingredient", 
                             key='ingredients_to_ignore')
 
-    st.sidebar.checkbox("Select to add weight to the edges", key='edge_count')

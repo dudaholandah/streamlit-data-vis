@@ -148,7 +148,6 @@ class Visualizations:
 
     data = st.session_state['df_filtered']
     column = 'Ingredients'
-    edge_count = st.session_state['edge_count']
     times = st.session_state['times']
 
     if column not in st.session_state['df_filtered'].columns:
@@ -214,12 +213,8 @@ class Visualizations:
       net_to_download.add_node(src, size=num_src)
       net_to_download.add_node(dest, size=num_dest)
 
-      if edge_count:
-        net.add_edge(src, dest, value=count)
-        net_to_download.add_edge(src, dest, value=count)
-      else:
-        net.add_edge(src, dest)
-        net_to_download.add_edge(src, dest)
+      net.add_edge(src, dest, value=count)
+      net_to_download.add_edge(src, dest, value=count)
 
     net.save_graph("data/graph_to_display.html")
     net_to_download.save_graph("data/graph_to_download.html")
