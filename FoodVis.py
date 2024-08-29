@@ -97,13 +97,22 @@ def render_global_visualization():
     is_creating_label = False
   
   # plot and filter points in the visualization 
-  selected_points = plotly_events(scatterplot_vis, select_event=True, override_height=650, key='selected_points')
+  selected_points = plotly_events(scatterplot_vis, select_event=True, override_height=650, key=f'selected_points_{st.session_state.count}')
   points_dataframe = selected_points_to_dataframe(selected_points)
+
+  if st.button('❎ Clear the Selected Points'):
+    print("Cliquei")
+    st.session_state.count += 1    
+    points_dataframe = pd.DataFrame()
 
   # filter points based on their category or ingredients
   selected_points_multiselect = filter_points()
+  points_dataframe = pd.concat([points_dataframe, selected_points_multiselect])
 
-  update_state(points_dataframe if not points_dataframe.empty else selected_points_multiselect, is_creating_label)
+  if points_dataframe.empty:
+    st.session_state['local_vis_ready'] = False
+
+  update_state(points_dataframe, is_creating_label)
 
 
 def render_local_visualizations():

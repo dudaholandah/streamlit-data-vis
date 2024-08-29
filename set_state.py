@@ -14,7 +14,9 @@ def initialize_state():
 
   if 'created_label' not in st.session_state:
     st.session_state['created_label'] = 'New Label'
-
+  
+  if 'count' not in st.session_state:
+    st.session_state.count = 0
 
 def clear_state():    
   st.session_state['selected_points_query'] = pd.DataFrame()
