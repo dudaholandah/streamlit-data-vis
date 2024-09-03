@@ -31,8 +31,11 @@ class Upload:
       sheetname = st.sidebar.selectbox("Select the sheetname", wb.sheetnames, key="sheetname")
       df = pd.read_excel(file_uploaded, sheet_name=sheetname)
     else:
-      st.sidebar.caption("USDA dataset has been uploaded. If you would like to see another file, feel free to upload.")
-      df = pd.read_excel("data/usda_fndds.xlsx", sheet_name="Sheet1") 
+      option = st.sidebar.radio("Or select a between the following datasets:", ["Vegan Food Dataset", "USDA Food and Nutrient Database"])
+      if option == "Vegan Food Dataset":
+        df = pd.read_excel("data/vegan_dataset.xlsx", sheet_name="Veganos") 
+      else:
+        df = pd.read_excel("data/usda_fndds.xlsx", sheet_name="Sheet1") 
 
     # save on session state
     if 'uploaded_df' not in st.session_state:
@@ -45,7 +48,7 @@ class Upload:
       clear_state()
 
   def select_label(self):
-    st.sidebar.write("**Label/Category** to color the points:")
+    st.sidebar.write("**Category** to color the points:")
     label_category = st.sidebar.radio("Select how you would like to aggregate the products in the dataset:", 
                                       ['Dataset Column', 'Create Label'], key="choice")
     # 'Gluten', 'Vegetarian', 'Lactose'
