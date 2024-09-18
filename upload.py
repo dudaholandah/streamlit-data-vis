@@ -98,7 +98,7 @@ class Upload:
 
   def select_scatterplot(self):
     st.sidebar.write("For **Visualization 1**:")
-    st.sidebar.radio("Select a dimension reduction option:", ["PCA", "t-SNE"], 
+    st.sidebar.radio("Select a dimension reduction option:", ["PCA", "UMAP"], 
                      horizontal=True, key='scatterplot_option')
 
   def select_parallel_coordinates(self):

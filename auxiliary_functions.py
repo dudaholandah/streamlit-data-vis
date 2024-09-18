@@ -9,7 +9,6 @@ def pre_process_string(text):
   text = re.sub(r'[\[\].,():%-]+', " ", text)
   text = re.sub(r'[\s]+', " ", text)
   text = re.sub(r'[^\w\s]', " ", text)
-  text = re.sub(r'\d', " ", text)
   text = unidecode(text.strip().lower())
   return text
 

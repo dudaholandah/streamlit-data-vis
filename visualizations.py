@@ -82,7 +82,7 @@ class Visualizations:
   
   def scatterplot_umap(self):
 
-    reducer = umap.UMAP(n_components=2,n_neighbors=10, min_dist=0.1,metric='euclidean', random_state=0)
+    reducer = umap.UMAP(n_components=2,n_neighbors=20, min_dist=0.3,metric='euclidean', random_state=0)
     X_umap = reducer.fit_transform(st.session_state['X'])
 
     X_umap[1:4, :]
@@ -208,10 +208,10 @@ class Visualizations:
         if src in e: num_src += 1
         if dest in e: num_dest += 1
 
-      net.add_node(src, size=num_src)
-      net.add_node(dest, size=num_dest)
-      net_to_download.add_node(src, size=num_src)
-      net_to_download.add_node(dest, size=num_dest)
+      net.add_node(src)
+      net.add_node(dest)
+      net_to_download.add_node(src)
+      net_to_download.add_node(dest)
 
       net.add_edge(src, dest, value=count)
       net_to_download.add_edge(src, dest, value=count)

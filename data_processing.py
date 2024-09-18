@@ -49,6 +49,7 @@ class DataProcessing:
     # pre-processing label
     for i in range(data_label.shape[0]):
       data_label[i] = data_label[i].rstrip()
+      st.session_state['df'][label][i] = st.session_state['df'][label][i].rstrip()
 
     # split data
     X = data_attr_normalized.values

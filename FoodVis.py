@@ -21,7 +21,7 @@ st.markdown("""
   """, unsafe_allow_html=True)
 
 def filter_points():
-  category_points = st.multiselect("Select the points based on their Category (color)", sorted(st.session_state['df'][st.session_state.label].unique()))
+  category_points = st.multiselect("Select the points based on their Category (color)", sorted(st.session_state['df'][st.session_state.label].str.strip().unique()))
   if category_points:
     selected_points_by_category = st.session_state['df'][st.session_state['df'][st.session_state.label].isin(category_points)]
   else:
@@ -33,11 +33,6 @@ def filter_points():
                                       placeholder="Type or search the ingredient")
   if ingredients_points:
     copy_of_df = st.session_state['df'].copy()
-    ## this way we select a substring
-    # copy_of_df['Processed_Ingredients'] = st.session_state['df']['Ingredients'].apply(lambda x: pre_process_string(x))
-    # selected_points_by_ingredients = copy_of_df[copy_of_df['Processed_Ingredients']
-    #                                  .apply(lambda x: any(ingredient in x for ingredient in ingredients_points))]
-    # copy_of_df.drop('Processed_Ingredients', axis=1, inplace=True)
     
     ## this way we select the exact word split by comma
     filtered_rows = []
@@ -52,15 +47,7 @@ def filter_points():
     selected_points_by_ingredients = pd.DataFrame(filtered_rows)    
   else:
     selected_points_by_ingredients = pd.DataFrame()
-
-  ## this way we select the inner join of category and ingredients selection
-  # if selected_points_by_category.empty:
-  #   selected_points_multiselect = selected_points_by_ingredients.copy()
-  # elif selected_points_by_ingredients.empty:
-  #   selected_points_multiselect = selected_points_by_category.copy()
-  # else:
-  #   selected_points_multiselect = selected_points_by_category[selected_points_by_category.index.isin(selected_points_by_ingredients.index)]
-  
+ 
   ## this way we select the outter join of category and ingredients selection
   selected_points_multiselect = pd.concat([selected_points_by_category, selected_points_by_ingredients])
   return selected_points_multiselect
@@ -76,9 +63,9 @@ def render_global_visualization():
   if st.session_state['scatterplot_option'] == "PCA":
     scatterplot_vis, variance = visualizations.scatterplot_pca()
   else:
-    scatterplot_vis = visualizations.scatterplot_tsne()
+    scatterplot_vis = visualizations.scatterplot_umap()
 
-  st.subheader("Visualization 1: Point based visualization") 
+  st.subheader("Visualization 1: Point placement visualization") 
   st.caption("Select a sample of points to be analyzed")
 
   # plot PCA metrics
